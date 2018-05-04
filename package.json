@@ -1,0 +1,71 @@
+{
+  "name": "@liquid-state/iwa-cognito-identity",
+  "version": "0.1.0",
+  "description": "",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --parser typescript --single-quote --trailing-comma es5 --print-width 99 --write \"./src/**/*.ts\"",
+    "test": "jest",
+    "prepack": "tsc"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "npm run format -- ",
+      "git add"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liquid-state/iwa-cognito-identity.git"
+  },
+  "author": "Liquid State <dev@liquid-state.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/liquid-state/iwa-cognito-identity/issues"
+  },
+  "homepage": "https://github.com/liquid-state/iwa-cognito-identity#readme",
+  "peerDependencies": {
+    "@liquid-state/iwa-core": "^0.2",
+    "@liquid-state/iwa-identity": "^0.1",
+    "@liquid-state/iwa-keyvalue": "^0.2"
+  },
+  "devDependencies": {
+    "@liquid-state/iwa-core": "^0.2",
+    "@liquid-state/iwa-keyvalue": "^0.2",
+    "@types/jest": "^22.1.2",
+    "@types/lodash": "^4.14.103",
+    "husky": "^0.15.0-rc.13",
+    "jest": "^22.3.0",
+    "lint-staged": "^7.0.5",
+    "prettier": "^1.10.2",
+    "ts-jest": "^22.0.4",
+    "typescript": "^2.7.1"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|.*.test)\\.(ts|tsx|js)$",
+    "roots": [
+      "<rootDir>/src"
+    ]
+  },
+  "dependencies": {
+    "amazon-cognito-identity-js": "^2.0.3"
+  }
+}
