@@ -26,7 +26,7 @@ import {
   REGISTRATION_FAILURE_GENERIC,
 } from './const';
 
-export class AWSAuthenticationService implements IAuthenticationService {
+export default class CognitoAuthenticator implements IAuthenticationService {
   private user: CognitoUser | null = null;
 
   constructor(private userPool: CognitoUserPool) {}
