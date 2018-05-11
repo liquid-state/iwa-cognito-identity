@@ -35,14 +35,14 @@
   },
   "homepage": "https://github.com/liquid-state/iwa-cognito-identity#readme",
   "peerDependencies": {
-    "@liquid-state/iwa-core": "^0.2",
-    "@liquid-state/iwa-identity": "^0.1",
-    "@liquid-state/iwa-keyvalue": "^0.2"
+    "@liquid-state/iwa-core": "^1",
+    "@liquid-state/iwa-identity": "^1",
+    "@liquid-state/iwa-keyvalue": "^1"
   },
   "devDependencies": {
-    "@liquid-state/iwa-core": "^0.2",
-    "@liquid-state/iwa-identity": "^0.1",
-    "@liquid-state/iwa-keyvalue": "^0.2",
+    "@liquid-state/iwa-core": "^1",
+    "@liquid-state/iwa-identity": "^1",
+    "@liquid-state/iwa-keyvalue": "^1",
     "@types/jest": "^22.1.2",
     "@types/lodash": "^4.14.103",
     "@types/node": "^10.0.6",
