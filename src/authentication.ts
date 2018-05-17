@@ -73,7 +73,12 @@ export default class CognitoAuthenticator implements IAuthenticationService {
         newPassword,
         {},
         {
-          onSuccess: session => resolve(session),
+          onSuccess: session =>
+            resolve({
+              code: LOGIN_RESPONSE_SUCCESS,
+              credentials: session,
+              identity: user.getUsername(),
+            }),
           onFailure: ({ code }) => reject(code),
           mfaRequired: () => resolve({ code: LOGIN_RESPONSE_MFA_REQUIRED }),
         }
