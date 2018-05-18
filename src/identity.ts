@@ -93,7 +93,11 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
       this.configureAWSCredentials();
     }
     if (this.credentialsProvider && this.credentialsProvider.needsRefresh()) {
-      await this.refreshAWSCredentials();
+      try {
+        await this.refreshAWSCredentials();
+      } catch (e) {
+        this.identity = new Identity(null, null);
+      }
     }
     return this.identity;
   }
