@@ -79,7 +79,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
       this.session = null;
     }
     if (!this.session) {
-      await this.restoreSession();
+      await this.restoreSession(storedIdentity);
     }
     if (this.session && !this.session.isValid()) {
       try {
@@ -126,8 +126,8 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     await this.store.store(this.storeKey, { identity: null, credentials: null });
   }
 
-  private async restoreSession() {
-    let { identity, credentials } = await this.store.fetch(this.storeKey);
+  private async restoreSession(storedIdentity: ISerialisableIdentity) {
+    let { identity, credentials } = storedIdentity;
     if (!identity || !credentials) {
       return;
     }
