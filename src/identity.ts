@@ -112,7 +112,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     await this.configureAWSCredentials();
     await this.refreshAWSCredentials();
     if (store) {
-      await this.store.store(this.storeKey, { identity: name, credentials });
+      this.store.store(this.storeKey, { identity: name, credentials });
     }
     return this.identity;
   }
@@ -127,7 +127,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     this.credentialsProvider = undefined;
     AWS.config.credentials = undefined;
 
-    await this.store.store(this.storeKey, { identity: null, credentials: null });
+    this.store.store(this.storeKey, { identity: null, credentials: null });
   }
 
   private async restoreSession(storedIdentity: ISerialisableIdentity) {
