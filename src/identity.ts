@@ -121,11 +121,24 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     this.session = null;
     // This is needed to remove the IdentityId from the aws credentials provider
     // This appears to be maintained across objects even when the provider has been disposed.
-    if (this.credentialsProvider) {
-      this.credentialsProvider.clearCachedId();
-    }
+    new CognitoIdentityCredentials({ IdentityPoolId: this.identityPoolId }).clearCachedId();
     this.credentialsProvider = undefined;
     AWS.config.credentials = undefined;
+
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (
+        key.indexOf('CognitoIdentityServiceProvider') === 0 ||
+        key.indexOf('aws.cognito') === 0
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    for (let j = 0, key; (key = keysToRemove[j]); j++) {
+      localStorage.removeItem(key);
+    }
 
     this.store.store(this.storeKey, { identity: null, credentials: null });
   }
