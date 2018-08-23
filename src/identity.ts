@@ -155,11 +155,19 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
   }
 
   private createUserSession(credentials: any): CognitoUserSession {
-    return new CognitoUserSession({
+    const session = new CognitoUserSession({
       IdToken: new CognitoIdToken({ IdToken: credentials.idToken.jwtToken }),
       AccessToken: new CognitoAccessToken({ AccessToken: credentials.accessToken.jwtToken }),
       RefreshToken: new CognitoRefreshToken({ RefreshToken: credentials.refreshToken.token }),
-    });
+    }) as any;
+    // By default, CognitoUserSession.clockDrift assumes the session just got created.
+    // As this function is called when restoring old sessions credentials, the clockDrift can end up being huge,
+    // which in turn causes a session to be deemed valid when it shouldn't be,
+    // which in turn causes UserPool sessions to not be refreshed,
+    // which in turn causes the retrieval of credentials from the identity pool to fail.
+    // so just override whatever value the clockDrift has to be somethng small which won't cause any issue.
+    session.clockDrift = 10;
+    return session;
   }
 
   private async refreshExpiredSession() {
@@ -181,7 +189,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
           } else {
             // If there is no error, the session is valid.
             this.session = session!;
-            resolve();
+            resolve(this.update(this.identity.name!, session));
           }
         }
       );
