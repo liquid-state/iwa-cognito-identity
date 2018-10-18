@@ -98,7 +98,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     });
   }
 
-  private configureAWSCredentials(session: CognitoUserSession): CognitoIdentityCredentials {
+  private configureAWSCredentials(session: CognitoUserSession) {
     if (!AWS.config.credentials) {
       AWS.config.credentials = new CognitoIdentityCredentials({
         IdentityPoolId: this.identityPoolId,
@@ -106,8 +106,8 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
       });
     }
     // See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityCredentials.html
-    const credentials = (AWS.config.credentials as any).params;
-    credentials.Logins[this.loginMapId] = session.getIdToken().getJwtToken();
+    const credentials = AWS.config.credentials as CognitoIdentityCredentials;
+    (credentials.params as any).Logins[this.loginMapId] = session.getIdToken().getJwtToken();
     return credentials;
   }
 
