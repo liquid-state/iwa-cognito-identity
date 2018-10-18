@@ -75,7 +75,11 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
   }
 
   async update(name: string, session: CognitoUserSession, store = true) {
-    const user = new CognitoUser({ Username: name, Pool: this.userPool });
+    const user = new CognitoUser({
+      Username: name,
+      Pool: this.userPool,
+      Storage: this.storageHelper,
+    });
     // This will clear any existing sessions with this userpool and
     // update the currently stored tokens.
     user.setSignInUserSession(session);
