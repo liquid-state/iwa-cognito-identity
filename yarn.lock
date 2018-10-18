@@ -17,18 +17,18 @@
     js-tokens "^3.0.0"
 
 "@liquid-state/iwa-core@^1.0.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-core/-/iwa-core-1.1.0.tgz#ec33c261ed4e3b0d243c33b74010fa38938f68f9"
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-core/-/iwa-core-1.6.1.tgz#8ee4e189de538fccb185b6c3e9dc8bbd7844c1e8"
   dependencies:
     lodash-es "^4.17.5"
 
 "@liquid-state/iwa-identity@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-identity/-/iwa-identity-1.0.0.tgz#f84ab043d6a4368abf2cfd025353808fe95d5023"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-identity/-/iwa-identity-1.1.0.tgz#94e9da600e08faf102fd132564e0eb1e9ef01333"
 
 "@liquid-state/iwa-keyvalue@^1.0.0":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-keyvalue/-/iwa-keyvalue-1.0.1.tgz#f11d3b169cce9026b1e8dd01d8a7b0502c967dff"
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@liquid-state/iwa-keyvalue/-/iwa-keyvalue-1.0.3.tgz#97675f6a26bfd52f888d859666528baad0affe5a"
 
 "@types/jest@^22.1.2":
   version "22.2.3"
@@ -2323,8 +2323,8 @@ locate-path@^2.0.0:
     path-exists "^3.0.0"
 
 lodash-es@^4.17.5:
-  version "4.17.10"
-  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.10.tgz#62cd7104cdf5dd87f235a837f0ede0e8e5117e05"
+  version "4.17.11"
+  resolved "https://registry.yarnpkg.com/lodash-es/-/lodash-es-4.17.11.tgz#145ab4a7ac5c5e52a3531fb4f310255a152b4be0"
 
 lodash.sortby@^4.7.0:
   version "4.7.0"
