@@ -1,20 +1,14 @@
 import * as AWS from 'aws-sdk/global';
 import { CognitoIdentityCredentials } from 'aws-sdk';
 
-import {
-  CognitoUserSession,
-  CognitoUserPool,
-  CognitoUser,
-  CognitoIdToken,
-  CognitoAccessToken,
-  CognitoRefreshToken,
-} from 'amazon-cognito-identity-js';
+import { CognitoUserSession, CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 
 import { IIdentity } from '@liquid-state/iwa-identity/dist/identity';
 import { IIdentityProvider } from '@liquid-state/iwa-identity/dist/manager';
-import { IIdentityStore, ISerialisableIdentity } from '@liquid-state/iwa-identity/dist/store';
+import { IIdentityStore } from '@liquid-state/iwa-identity/dist/store';
 
 import { Identity } from '@liquid-state/iwa-identity';
+import KVStorage, { OpaqueObject } from './storage';
 
 export type AWSServiceCredentials = {
   accessKeyId: string;
@@ -23,207 +17,100 @@ export type AWSServiceCredentials = {
 };
 
 /**
- * An aws specific identity which returns valid credentials based on the awsCredentialsProvider.
- * The awsCredentialsProvider is supplied as a thunk so that if the provider changes credentials,
- * those changes are made available to the identity
+ * An aws specific identity which returns valid credentials from Cognito.
  */
 export class AWSIdentity implements IIdentity<AWSServiceCredentials> {
   public isAuthenticated: boolean;
-  public name: string;
-
   private identityMap = new Map<string, string>();
-  private credentialsProvider: () => any;
 
-  constructor(name: string, awsCredentialsProviderFn: any) {
-    this.name = name;
-    this.credentialsProvider = awsCredentialsProviderFn;
-
+  constructor(public name: string, public credentials: CognitoIdentityCredentials) {
     this.isAuthenticated = Boolean(name);
-  }
-
-  get credentials() {
-    let credsProvider = this.credentialsProvider();
-    return {
-      accessKeyId: credsProvider.accessKeyId,
-      secretAccessKey: credsProvider.secretAccessKey,
-      sessionToken: credsProvider.sessionToken,
-    };
   }
 
   get identifiers() {
     if (!this.identityMap.has('sub')) {
-      const creds = this.credentialsProvider();
-      this.identityMap.set('sub', creds.identityId);
+      this.identityMap.set('sub', this.credentials.identityId);
     }
     return this.identityMap;
   }
 }
 
 export default class CognitoIdentityProvider implements IIdentityProvider<AWSServiceCredentials> {
-  private identity: IIdentity<AWSServiceCredentials> = new Identity(null, null);
-  private session: CognitoUserSession | null;
-
-  private credentialsProvider: CognitoIdentityCredentials | undefined;
+  private storageHelper = new KVStorage(this.storeKey, this.store);
 
   constructor(
     private userPool: CognitoUserPool,
     private identityPoolId: string,
-    private store: IIdentityStore,
+    private store: IIdentityStore<OpaqueObject>,
     private storeKey = 'cognito'
-  ) {}
-
-  async getIdentity() {
-    const storedIdentity = await this.store.fetch(this.storeKey);
-    if (this.identity.name && storedIdentity.identity !== this.identity.name) {
-      this.identity = new Identity(null, null);
-      this.session = null;
-    }
-    if (!this.session) {
-      await this.restoreSession(storedIdentity);
-    }
-    if (this.session && !this.session.isValid()) {
-      try {
-        await this.refreshExpiredSession();
-      } catch (e) {
-        this.identity = new Identity(null, null);
-        return this.identity;
-      }
-    }
-    if (!this.credentialsProvider) {
-      this.configureAWSCredentials();
-    }
-    if (this.credentialsProvider && this.credentialsProvider.needsRefresh()) {
-      try {
-        await this.refreshAWSCredentials();
-      } catch (e) {
-        this.identity = new Identity(null, null);
-      }
-    }
-    return this.identity;
+  ) {
+    (this.userPool as any).storage = this.storageHelper;
   }
 
-  async update(name: string, credentials: any, store = true) {
-    this.identity = new AWSIdentity(name, () => this.credentialsProvider);
-    this.session = new CognitoUserSession({
-      IdToken: credentials.idToken,
-      AccessToken: credentials.accessToken,
-      RefreshToken: credentials.refreshToken,
-    });
-    await this.configureAWSCredentials();
-    await this.refreshAWSCredentials();
-    if (store) {
-      this.store.store(this.storeKey, { identity: name, credentials });
+  private get loginMapId() {
+    const {
+      config: { region },
+    } = AWS;
+    return `cognito-idp.${region}.amazonaws.com/${this.userPool.getUserPoolId()}`;
+  }
+
+  async getIdentity() {
+    await this.storageHelper.sync();
+    const user = this.userPool.getCurrentUser();
+    if (!user) {
+      return new Identity(null, null);
     }
-    return this.identity;
+    try {
+      const session = await this.getSession(user);
+      const credentials = this.configureAWSCredentials(session);
+
+      if (credentials.needsRefresh()) {
+        await this.refreshAWSCredentials(credentials);
+      }
+      return new AWSIdentity(user.getUsername(), credentials);
+    } catch (e) {
+      console.log(e);
+      return new Identity(null, null);
+    }
+  }
+
+  async update(name: string, session: CognitoUserSession, store = true) {
+    const user = new CognitoUser({ Username: name, Pool: this.userPool });
+    // This will clear any existing sessions with this userpool and
+    // update the currently stored tokens.
+    user.setSignInUserSession(session);
+    return this.getIdentity();
   }
 
   async clear() {
-    this.session = null;
-    // This is needed to remove the IdentityId from the aws credentials provider
-    // This appears to be maintained across objects even when the provider has been disposed.
-    new CognitoIdentityCredentials({ IdentityPoolId: this.identityPoolId }).clearCachedId();
-    this.credentialsProvider = undefined;
-    AWS.config.credentials = undefined;
-
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key) continue;
-      if (
-        key.indexOf('CognitoIdentityServiceProvider') === 0 ||
-        key.indexOf('aws.cognito') === 0
-      ) {
-        keysToRemove.push(key);
-      }
-    }
-    for (let j = 0, key; (key = keysToRemove[j]); j++) {
-      localStorage.removeItem(key);
-    }
-
-    this.store.store(this.storeKey, { identity: null, credentials: null });
+    this.storageHelper.clear();
   }
 
-  private async restoreSession(storedIdentity: ISerialisableIdentity) {
-    let { identity, credentials } = storedIdentity;
-    if (!identity || !credentials) {
-      return;
-    }
-    this.session = this.createUserSession(credentials);
-    // Restore identity.
-    // Note that credentials provider is not configured yet
-    this.identity = new AWSIdentity(identity, () => this.credentialsProvider);
-  }
-
-  private createUserSession(credentials: any): CognitoUserSession {
-    const session = new CognitoUserSession({
-      IdToken: new CognitoIdToken({ IdToken: credentials.idToken.jwtToken }),
-      AccessToken: new CognitoAccessToken({ AccessToken: credentials.accessToken.jwtToken }),
-      RefreshToken: new CognitoRefreshToken({ RefreshToken: credentials.refreshToken.token }),
-    }) as any;
-    // By default, CognitoUserSession.clockDrift assumes the session just got created.
-    // As this function is called when restoring old sessions credentials, the clockDrift can end up being huge,
-    // which in turn causes a session to be deemed valid when it shouldn't be,
-    // which in turn causes UserPool sessions to not be refreshed,
-    // which in turn causes the retrieval of credentials from the identity pool to fail.
-    // so just override whatever value the clockDrift has to be somethng small which won't cause any issue.
-    session.clockDrift = 10;
-    return session;
-  }
-
-  private async refreshExpiredSession() {
-    const user = new CognitoUser({
-      Username: this.identity.name!,
-      Pool: this.userPool,
+  private getSession(user: CognitoUser) {
+    return new Promise<CognitoUserSession>((resolve, reject) => {
+      user.getSession((err: any, session: CognitoUserSession) => {
+        err ? reject(err) : resolve(session);
+      });
     });
+  }
+
+  private configureAWSCredentials(session: CognitoUserSession): CognitoIdentityCredentials {
+    if (!AWS.config.credentials) {
+      AWS.config.credentials = new CognitoIdentityCredentials({
+        IdentityPoolId: this.identityPoolId,
+        Logins: {},
+      });
+    }
+    // See https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentityCredentials.html
+    const credentials = (AWS.config.credentials as any).params;
+    credentials.Logins[this.loginMapId] = session.getIdToken().getJwtToken();
+    return credentials;
+  }
+
+  private refreshAWSCredentials(credentials: CognitoIdentityCredentials) {
     return new Promise((resolve, reject) => {
-      user.refreshSession(
-        this.session!.getRefreshToken(),
-        (err: any, session?: CognitoUserSession) => {
-          if (err) {
-            if (err.code === 'NetworkingError') {
-              // Offline just rely on the refreshToken for now.
-              resolve();
-              return;
-            }
-            reject();
-          } else {
-            // If there is no error, the session is valid.
-            this.session = session!;
-            resolve(this.update(this.identity.name!, session));
-          }
-        }
-      );
-    });
-  }
-
-  private configureAWSCredentials() {
-    if (!this.session) {
-      return;
-    }
-    this.credentialsProvider = new CognitoIdentityCredentials({
-      IdentityPoolId: this.identityPoolId,
-      Logins: {
-        [`cognito-idp.${
-          AWS.config.region
-        }.amazonaws.com/${this.userPool.getUserPoolId()}`]: this.session
-          .getIdToken()
-          .getJwtToken(),
-      },
-    });
-    AWS.config.credentials = this.credentialsProvider;
-  }
-
-  private refreshAWSCredentials() {
-    return new Promise((resolve, reject) => {
-      if (!this.credentialsProvider) {
-        reject();
-        return;
-      }
-      this.credentialsProvider.refresh(err => {
-        if (err) {
-          reject(err);
-        }
-        resolve();
+      credentials.refresh(err => {
+        err ? reject(err) : resolve();
       });
     });
   }
