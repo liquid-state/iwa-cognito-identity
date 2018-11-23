@@ -42,11 +42,15 @@ class KVStorage {
   };
 
   sync = async (): Promise<void> => {
+    let cache;
     try {
-      this.cache = await this.store.fetch(this.storeKey);
-    } catch (e) {
-      this.cache = {};
+      cache = await this.store.fetch(this.storeKey);
+    } catch (e) {}
+    // Default if cache errors, or returns null.
+    if (!cache) {
+      cache = {};
     }
+    this.cache = cache;
   };
 }
 
