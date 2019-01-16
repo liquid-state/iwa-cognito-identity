@@ -21,7 +21,11 @@ class KVStorage {
   constructor(private storeKey: string, private store: IIdentityStore<OpaqueObject>) {}
 
   getItem = (key: string) => {
-    return Object.prototype.hasOwnProperty.call(this.cache, key) ? this.cache[key] : undefined;
+    const result = Object.prototype.hasOwnProperty.call(this.cache, key)
+      ? this.cache[key]
+      : undefined;
+    console.log('Accessing id cache key', key, result);
+    return result;
   };
 
   setItem = (key: string, value: string) => {
@@ -43,13 +47,17 @@ class KVStorage {
 
   sync = async (): Promise<void> => {
     let cache;
+    console.log('Updating ID cache');
     try {
       cache = await this.store.fetch(this.storeKey);
-    } catch (e) {}
+    } catch (e) {
+      console.error('ERROR updating cache', e);
+    }
     // Default if cache errors, or returns null.
     if (!cache) {
       cache = {};
     }
+    console.log('New Id cache', cache);
     this.cache = cache;
   };
 }

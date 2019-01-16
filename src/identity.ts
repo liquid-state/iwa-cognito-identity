@@ -36,16 +36,12 @@ export class AWSIdentity implements IIdentity<AWSServiceCredentials> {
 }
 
 export default class CognitoIdentityProvider implements IIdentityProvider<AWSServiceCredentials> {
-  private storageHelper = new KVStorage(this.storeKey, this.store);
-
   constructor(
     private userPool: CognitoUserPool,
     private identityPoolId: string,
     private store: IIdentityStore<OpaqueObject>,
     private storeKey = 'cognito'
-  ) {
-    (this.userPool as any).storage = this.storageHelper;
-  }
+  ) {}
 
   private get loginMapId() {
     const {
@@ -55,7 +51,6 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
   }
 
   async getIdentity() {
-    await this.storageHelper.sync();
     const user = this.userPool.getCurrentUser();
     if (!user) {
       return new Identity(null, null);
@@ -78,7 +73,6 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     const user = new CognitoUser({
       Username: name,
       Pool: this.userPool,
-      Storage: this.storageHelper,
     });
     // This will clear any existing sessions with this userpool and
     // update the currently stored tokens.
@@ -87,7 +81,10 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
   }
 
   async clear() {
-    this.storageHelper.clear();
+    const user = this.userPool.getCurrentUser();
+    if (user) {
+      user.signOut();
+    }
   }
 
   private getSession(user: CognitoUser) {
