@@ -77,6 +77,8 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     // This will clear any existing sessions with this userpool and
     // update the currently stored tokens.
     user.setSignInUserSession(session);
+    // Clear any cached credentials.
+    AWS.config.credentials = undefined;
     return this.getIdentity();
   }
 
@@ -85,6 +87,7 @@ export default class CognitoIdentityProvider implements IIdentityProvider<AWSSer
     if (user) {
       user.signOut();
     }
+    AWS.config.credentials = undefined;
   }
 
   private getSession(user: CognitoUser) {
