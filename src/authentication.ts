@@ -127,8 +127,8 @@ export default class CognitoAuthenticator implements IAuthenticationService {
     });
   }
 
-  async confirmRegistration(code: string) {
-    let user = await this.getUser();
+  async confirmRegistration(code: string, forUsername?: string) {
+    let user = await this.getUser(forUsername);
     return new Promise((resolve, reject) => {
       user.confirmRegistration(code, false, (error, result) => {
         if (error) {

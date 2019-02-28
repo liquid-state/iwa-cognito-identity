@@ -30,7 +30,7 @@ export interface IAuthenticationService {
   completeChangePassword: (newPassword: string) => Promise<any>;
   register: (userData: object) => Promise<RegistrationResponse>;
   resendRegistrationCode: () => Promise<any>;
-  confirmRegistration: (code: string) => Promise<any>;
+  confirmRegistration: (code: string, forUsername?: string) => Promise<any>;
   validateMFAToken: (token: string) => Promise<any>;
   beginResetPassword: (username: string) => Promise<any>;
   completeResetPassword: (validationCode: string, newPassword: string) => Promise<any>;
