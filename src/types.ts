@@ -36,4 +36,5 @@ export interface IAuthenticationService {
   completeResetPassword: (validationCode: string, newPassword: string) => Promise<any>;
   enableMFA: () => Promise<any>;
   disableMFA: () => Promise<any>;
+  userChangePassword: (oldPassword: string, newPassword: string, username: string) => Promise<any>;
 }

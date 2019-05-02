@@ -180,6 +180,33 @@ export default class CognitoAuthenticator implements IAuthenticationService {
     });
   }
 
+  async userChangePassword(oldPassword: string, newPassword: string, username: string) {
+    const user = await this.getUser(username);
+
+    // await this.login({ username, password: oldPassword });
+
+    await new Promise((resolve, reject) =>
+      user.getSession((err: any, session: any) => {
+        if (err) {
+          console.error(err);
+          return reject(err);
+        }
+        return resolve(session);
+      })
+    );
+
+    return new Promise((resolve, reject) => {
+      user.changePassword(oldPassword, newPassword, (err, data) => {
+        console.log('err', err);
+        if (err) {
+          console.error(err);
+          return reject(err);
+        }
+        return resolve();
+      });
+    });
+  }
+
   async enableMFA() {
     const user = await this.getUser();
     return new Promise((resolve, reject) => {
