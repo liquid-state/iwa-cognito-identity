@@ -25,11 +25,29 @@ import {
   REGISTRATION_PHONE_NUMBER_EXISTS,
   REGISTRATION_FAILURE_GENERIC,
 } from './const';
+import { AWSIdentity } from './identity';
 
 export default class CognitoAuthenticator implements IAuthenticationService {
-  private user: CognitoUser | null = null;
+  constructor(private userPool: CognitoUserPool, private user?: CognitoUser) {}
 
-  constructor(private userPool: CognitoUserPool) {}
+  static async fromIdentity(userPool: CognitoUserPool, identity: AWSIdentity): Promise<CognitoAuthenticator> {
+    const user = new CognitoUser({
+      Username: identity.name,
+      Pool: userPool,
+    });
+    await new Promise((resolve, reject) => {
+      user.getSession((err: string, session: any) => {
+        if (err) {
+          reject({
+            message: `Unable to get a valid session for this user: ${identity.name}`,
+            err,
+          });
+        }
+        resolve(session);
+      });
+    });
+    return new CognitoAuthenticator(userPool, user);
+  }
 
   async login({ username, password }: { username: string; password: string }) {
     let user = await this.getUser(username);
