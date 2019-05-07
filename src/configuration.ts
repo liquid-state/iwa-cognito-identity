@@ -2,7 +2,7 @@ import * as AWS from 'aws-sdk/global';
 import { CognitoUserPool } from 'amazon-cognito-identity-js';
 import KeyValuePlugin, { Key } from '@liquid-state/iwa-keyvalue';
 import IdentityPlugin, { IdentityStore } from '@liquid-state/iwa-identity';
-import CognitoIdentity from './identity';
+import CognitoIdentity, { AWSIdentity } from './identity';
 import CognitoAuthenticator from './authentication';
 import { IApp } from '@liquid-state/iwa-core/dist/app/app';
 
@@ -41,5 +41,10 @@ export const getAuthenticator = async (app: IApp) => {
     UserPoolId: settings.AWS_USER_POOL_ID,
     ClientId: settings.AWS_USER_POOL_CLIENT_ID,
   });
+  const idp = await app.use(IdentityPlugin);
+  const identity = await idp.forService('cognito').getIdentity();
+  if (identity.isAuthenticated) {
+    return CognitoAuthenticator.fromIdentity(userPool, identity as AWSIdentity);
+  }
   return new CognitoAuthenticator(userPool);
 };
