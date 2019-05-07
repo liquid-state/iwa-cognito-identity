@@ -30,7 +30,10 @@ import { AWSIdentity } from './identity';
 export default class CognitoAuthenticator implements IAuthenticationService {
   constructor(private userPool: CognitoUserPool, private user?: CognitoUser) {}
 
-  static async fromIdentity(userPool: CognitoUserPool, identity: AWSIdentity): Promise<CognitoAuthenticator> {
+  static async fromIdentity(
+    userPool: CognitoUserPool,
+    identity: AWSIdentity
+  ): Promise<CognitoAuthenticator> {
     const user = new CognitoUser({
       Username: identity.name,
       Pool: userPool,
@@ -194,6 +197,19 @@ export default class CognitoAuthenticator implements IAuthenticationService {
       user.confirmPassword(validationCode, newPassword, {
         onSuccess: resolve,
         onFailure: reject,
+      });
+    });
+  }
+
+  async userChangePassword(oldPassword: string, newPassword: string) {
+    const user = await this.getUser();
+
+    return new Promise((resolve, reject) => {
+      user.changePassword(oldPassword, newPassword, (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(data);
       });
     });
   }
