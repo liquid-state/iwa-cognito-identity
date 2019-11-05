@@ -48,3 +48,14 @@ export const getAuthenticator = async (app: IApp) => {
   }
   return new CognitoAuthenticator(userPool);
 };
+
+export const getRawUser = async (app: IApp) => {
+  const settings = await app.configuration(...COGNITO_SETTINGS);
+  const { AWS_REGION, AWS_USER_POOL_ID, AWS_USER_POOL_CLIENT_ID } = settings;
+  AWS.config.update({ region: AWS_REGION });
+  const userPool = new CognitoUserPool({
+    UserPoolId: AWS_USER_POOL_ID,
+    ClientId: AWS_USER_POOL_CLIENT_ID,
+  });
+  return userPool.getCurrentUser();
+};
