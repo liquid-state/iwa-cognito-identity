@@ -1,5 +1,5 @@
 import * as AWS from 'aws-sdk/global';
-import { CognitoUserPool } from 'amazon-cognito-identity-js';
+import { CognitoUserPool, CognitoUser } from 'amazon-cognito-identity-js';
 import KeyValuePlugin, { Key } from '@liquid-state/iwa-keyvalue';
 import IdentityPlugin, { IdentityStore } from '@liquid-state/iwa-identity';
 import CognitoIdentity, { AWSIdentity } from './identity';
@@ -47,4 +47,15 @@ export const getAuthenticator = async (app: IApp) => {
     return CognitoAuthenticator.fromIdentity(userPool, identity as AWSIdentity);
   }
   return new CognitoAuthenticator(userPool);
+};
+
+export const getRawUser = async (app: IApp): Promise<CognitoUser | null> => {
+  const settings = await app.configuration(...COGNITO_SETTINGS);
+  const { AWS_REGION, AWS_USER_POOL_ID, AWS_USER_POOL_CLIENT_ID } = settings;
+  AWS.config.update({ region: AWS_REGION });
+  const userPool = new CognitoUserPool({
+    UserPoolId: AWS_USER_POOL_ID,
+    ClientId: AWS_USER_POOL_CLIENT_ID,
+  });
+  return userPool.getCurrentUser();
 };
