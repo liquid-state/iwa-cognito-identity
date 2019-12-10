@@ -1,6 +1,6 @@
 {
   "name": "@liquid-state/iwa-cognito-identity",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "",
   "files": [
     "dist"
