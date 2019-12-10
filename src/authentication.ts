@@ -34,22 +34,7 @@ export default class CognitoAuthenticator implements IAuthenticationService {
     userPool: CognitoUserPool,
     identity: AWSIdentity
   ): Promise<CognitoAuthenticator> {
-    const user = new CognitoUser({
-      Username: identity.name,
-      Pool: userPool,
-    });
-    await new Promise((resolve, reject) => {
-      user.getSession((err: string, session: any) => {
-        if (err) {
-          reject({
-            message: `Unable to get a valid session for this user: ${identity.name}`,
-            err,
-          });
-        }
-        resolve(session);
-      });
-    });
-    return new CognitoAuthenticator(userPool, user);
+    return new CognitoAuthenticator(userPool, identity.credentials.user);
   }
 
   async login({ username, password }: { username: string; password: string }) {
