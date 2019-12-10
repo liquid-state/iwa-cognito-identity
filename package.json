@@ -34,16 +34,16 @@
     "url": "https://github.com/liquid-state/iwa-cognito-identity/issues"
   },
   "homepage": "https://github.com/liquid-state/iwa-cognito-identity#readme",
-  "peerDependencies": {
-    "amazon-cognito-identity-js": "^2.0.3",
-    "aws-sdk": "^2.232.1"
+  "dependencies": {
+    "@liquid-state/iwa-core": "^1.0.0",
+    "@liquid-state/iwa-identity": "^1.0.0",
+    "@liquid-state/iwa-keyvalue": "^1.0.0",
+    "amazon-cognito-identity-js": "^3"
   },
   "devDependencies": {
     "@types/jest": "^22.1.2",
     "@types/lodash": "^4.14.103",
     "@types/node": "^10.0.6",
-    "amazon-cognito-identity-js": "^2.0.3",
-    "aws-sdk": "^2.232.1",
     "husky": "^0.15.0-rc.13",
     "jest": "^22.3.0",
     "lint-staged": "^7.0.5",
@@ -64,10 +64,5 @@
     "roots": [
       "<rootDir>/src"
     ]
-  },
-  "dependencies": {
-    "@liquid-state/iwa-core": "^1.0.0",
-    "@liquid-state/iwa-identity": "^1.0.0",
-    "@liquid-state/iwa-keyvalue": "^1.0.0"
   }
 }
