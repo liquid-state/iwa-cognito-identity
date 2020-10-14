@@ -93,7 +93,7 @@ export default class CognitoAuthenticator implements IAuthenticationService {
   }
 
   async register(userData: { [key: string]: any }) {
-    const { username, password, email, phone } = userData;
+    const { username, password, email, phone, locale } = userData;
 
     let attributeList = [
       {
@@ -105,6 +105,15 @@ export default class CognitoAuthenticator implements IAuthenticationService {
         Value: phone,
       },
     ].map(attrib => new CognitoUserAttribute(attrib));
+
+    if (locale) {
+      attributeList.push(
+        new CognitoUserAttribute({
+          Name: 'locale',
+          Value: locale,
+        })
+      );
+    }
 
     return new Promise<RegistrationResponse>((resolve, reject) => {
       this.userPool.signUp(username, password, attributeList, [], (err, result) => {
