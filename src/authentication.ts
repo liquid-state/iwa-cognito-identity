@@ -253,11 +253,14 @@ export default class CognitoAuthenticator implements IAuthenticationService {
   }
 
   private async getUser(username = '') {
-    if (!this.user || username) {
+    if (!this.user || (username && this.user.getUsername() !== username)) {
+      // console.debug('creating new CognitoUser');
       this.user = new CognitoUser({
         Username: username,
         Pool: this.userPool,
       });
+    } else {
+      // console.debug('reusing CognitoUser');
     }
     return this.user;
   }
