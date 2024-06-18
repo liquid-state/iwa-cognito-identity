@@ -234,6 +234,43 @@ export default class CognitoAuthenticator implements IAuthenticationService {
     });
   }
 
+  public async getUserAttributeVerificationCode(attributeName: string) {
+    const user = await this.getUser();
+    if (!user) {
+      throw `User is not logged in: cannot get code for attribute ${attributeName}.`;
+    }
+    user.getAttributeVerificationCode(attributeName, {
+      onSuccess: () => {
+        console.log(`Sucessfully csent verification code for attribute ${attributeName}.`);
+      },
+      onFailure(err) {
+        console.log(`Failed sending verification code for attribute ${attributeName}.`);
+      },
+    });
+  }
+
+  public async verifyUserAttribute(
+    attributeName: string,
+    code: string,
+    successCallback: Function,
+    errorCallback: Function
+  ) {
+    const user = await this.getUser();
+    if (!user) {
+      throw `User is not logged in: cannot verify attribute ${attributeName}.`;
+    }
+    user.verifyAttribute(attributeName, code, {
+      onSuccess: () => {
+        console.log(`Sucessfully csent verification code for attribute ${attributeName}.`);
+        successCallback();
+      },
+      onFailure(err) {
+        console.log(`Failed sending verification code for attribute ${attributeName}.`);
+        errorCallback();
+      },
+    });
+  }
+
   private mapRegistrationError(error: { code: string; message: string }): RegistrationResponse {
     if (error.code === 'InvalidParameterException') {
       if (error.message.indexOf('email') !== -1) {

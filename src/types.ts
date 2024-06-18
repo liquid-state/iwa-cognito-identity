@@ -37,4 +37,11 @@ export interface IAuthenticationService {
   enableMFA: () => Promise<any>;
   disableMFA: () => Promise<any>;
   userChangePassword: (oldPassword: string, newPassword: string) => Promise<any>;
+  getUserAttributeVerificationCode: (attributeName: string) => Promise<any>;
+  verifyUserAttribute: (
+    attributeName: string,
+    code: string,
+    successCallback: Function,
+    errorCallback: Function
+  ) => Promise<any>;
 }
